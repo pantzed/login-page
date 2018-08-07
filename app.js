@@ -3,6 +3,7 @@
 
 /* eslint-env node */
 
+require('dotenv').config();
 
 const createError = require('http-errors');
 const express = require('express');
