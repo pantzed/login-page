@@ -1,9 +1,64 @@
-var express = require('express');
-var router = express.Router();
+'use strict'; 
+
+/* eslint-env node */
+
+
+const express = require('express');
+const router = express.Router();
+const env = process.env.NODE_ENV || 'development';
+const config = require('../knexfile')[env];
+const knex = require('knex')(config);
+
+
+
+router.post('/', function(req, res, next) {
+  res.render('index', {error: 'What up gangsta?'});
+});
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.post('/login', function(req, res, next) {
+  if (req.body.username && req.body.password) {
+    knex('users')
+    .where('username', req.body.username)
+    .then((user) => {
+      console.log(user);
+      if (user[0].password === req.body.password){
+        res.render('profile', {user: user, error: `Welcome, ${user[0].first} ${user[0].last}`});
+      }
+    })
+  }
+  else {
+    res.render('index', {error: "Please enter a username and password!"});
+  }
+});
+
+/* POST user listing. */
+router.post('/', function(req, res, next) {
+  const user = {};
+
+  if (req.body.username && req.body.password) {
+    knex('users')
+    .where('username', req.body.username)
+    .then((exists) => {
+      console.log(exists);
+      if (exists.length > 0) {
+        res.render('index', {error: "Username already exists, please sign in or create a new user!"});
+      }
+      else {
+        for (let key in req.body) {
+          user[key] = req.body[key];
+        }
+        return knex('users')
+        .insert(user)
+        .then((user) => {
+          res.render('profile', {user: user, error: `Welcome, ${user.username}`});
+        });
+      }
+    });
+  }
+  else {
+    res.render('index', {error: "Please enter a username and password!"});
+  }
 });
 
 module.exports = router;
